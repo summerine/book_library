@@ -1,61 +1,97 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html>
   <head>
-    <title>Kickoff</title>
+    <title>Book Library</title>
     <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <%= stylesheet_link_tag 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' %>
 
-    <%= stylesheet_link_tag  'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= stylesheet_pack_tag  'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_pack_tag  'application', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <script src="https://js.stripe.com/v3/"></script>
+
+
+  
+    <%= tag :meta, name: "stripe-key", content: Rails.application.credentials.stripe_publishable_key %>
+
 
   </head>
 
- <body class="bg-white">
-
-  <% flash.each do |type, message| %>
-    <% if type == "alert" %>
-      <div class="bg-red-500">
-        <div class="container px-2 mx-auto py-4 text-white text-center font-medium font-sans"><%= message %></div>
+  <body class="<%= yield (:body_class) %>">
+    <% if flash[:notice] %>
+      <div class="notification is-success global-notification">
+        <p class="notice"><%= notice %></p>
       </div>
     <% end %>
-    <% if type == "notice" %>
-      <div class="bg-green-500">
-        <div class="container px-2 mx-auto py-4 text-white text-center font-medium font-sans"><%= message %></div>
-      </div>
-    <% end %>
-  <% end %>
 
-    <header class="mb-4">
-      <nav class="flex items-center justify-between flex-wrap bg-gray-100 py-3 lg:px-10 px-3 text-gray-700 border-b border-gray-400">
-        <div class="flex items-center flex-no-shrink mr-6">
-          <%= link_to "Book Library", root_path, class:"link text-xl tracking-tight font-semibold" %>
+    <% if flash[:alert] %>
+    <div class="notification is-danger global-notification">
+      <p class="alert"><%= alert %></p>
+    </div>
+    <% end %>
+
+     <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <%= link_to root_path, class:"navbar-item" do %>
+          <h1 class="title is-5 has-text-white">Book Library</h1>
+        <% end  %>
+        <div class="navbar-burger burger" data-target="navbar">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-        <div class="block lg:hidden">
-          <button class="flex items-center px-3 py-2 border rounded text-grey border-gray-500 hover:text-gray-600 hover:border-gray-600">
-            <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
-          </button>
+      </div>
+
+      <div id="navbar" class="navbar-menu">
+        <div class="navbar-start">
+          <% if subscribed? %>
+            <div class="navbar-item">
+              <%= link_to library_index_path, class: 'navbar-item button is-dark' do %>
+                <i class="fa fa-book"></i> &nbsp;&nbsp; My Library
+              <% end %>
+            </div>
+          <% end %>
         </div>
-        <div class="w-full block lg:flex-1 lg:flex items-center text-center lg:text-left">
-          <div class="lg:flex-grow">
-            <%= link_to "Basic Link", "#", class: "block mt-4 lg:inline-block lg:mt-0 lg:mr-4 mb-2 lg:mb-0 link" %>
-          </div>
-          <div class="w-full block lg:flex lg:flex-row lg:flex-1 mt-2 lg:mt-0 text-center lg:text-left lg:justify-end items-center">
-            <% if user_signed_in? %>
-             <%= link_to "Log out", destroy_user_session_path, method: :delete, class:"btn btn-default mb-2 lg:mr-2 lg:mb-0 block" %>
-            <% else %>
-              <%= link_to "Login", new_user_session_path, class:"btn btn-default mb-2 lg:mr-2 lg:mb-0 block" %>
-            <%= link_to "Sign Up", new_user_registration_path, class:"btn btn-default block" %>
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <% if admin? %>
+              <%= link_to 'New Book', new_book_path, class:'button is-dark' %>
             <% end %>
+            <div class="field is-grouped">
+            <% if user_signed_in? %>
+
+              <div class="navbar-item has-dropdown is-hoverable">
+                <%= link_to 'Account', edit_user_registration_path, class: "navbar-link" %>
+                <div class="navbar-dropdown is-right">
+                  <%= link_to edit_user_registration_path, class:"navbar-item" do %>
+                    <%= current_user.name %> <% if admin? %> &nbsp; <span class="tag is-warning">ADMIN</span> <% end %>
+                  <% end %>
+                  <%= link_to "Log Out", destroy_user_session_path, method: :delete, class:"navbar-item" %>
+                </div>
+              </div>
+            <% else %>
+            <p class="control">
+              <%= link_to 'Pricing', pricing_index_path, class: 'navbar-item button is-dark' %>
+            </p>
+            <p class="control">
+              <%= link_to "Sign In", new_user_session_path, class:"navbar-item button is-dark" %>
+            </p>
+            <p class="control">
+              <%= link_to "Sign up", new_user_registration_path, class:"navbar-item button is-dark"%>
+            </p>
+            <% end %>
+
           </div>
         </div>
-      </nav>
-    </header>
+      </div>
+    </div>
+  </nav>
 
-    <main class="lg:px-10 px-4">
-      <%= content_for?(:content) ? yield(:content) : yield %>
-    </main>
+
+    <div class="container">
+      <%= yield %>
+    </div>
+
   </body>
 </html>
